@@ -1,864 +1,790 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>클린한 사람들 v2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>클린한 사람들</title>
 
-        :root {
-            --primary: #2d2d2d;
-            --primary-dark: #1a1a1a;
-            --secondary: #3a3a3a;
-            --bg: #0a0a0a;
-            --card: #1a1a1a;
-            --text: #ffffff;
-            --text-light: #b0b0b0;
-            --border: #333333;
-            --success: #4CAF50;
-            --warning: #FFA726;
-            --danger: #EF5350;
-        }
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
-            font-size: 15px;
-            overflow-x: hidden;
-            touch-action: pan-y;
-        }
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root{
+      --primary:#2d2d2d; --primary-dark:#1a1a1a; --secondary:#3a3a3a;
+      --bg:#0a0a0a; --card:#1a1a1a;
+      --text:#ffffff; --text-light:#b0b0b0; --border:#333333;
+      --success:#4CAF50; --warning:#FFA726; --danger:#EF5350;
+    }
+    body{
+      font-family:'Noto Sans KR',sans-serif;
+      background:var(--bg); color:var(--text);
+      line-height:1.5; font-size:15px; overflow-x:hidden; touch-action:pan-y;
+    }
 
-        /* 홈 화면 */
-        .home-screen {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    .home-screen{
+      min-height:100vh;
+      background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .logo-text{ font-size:clamp(32px,8vw,48px); font-weight:800; letter-spacing:-2px; margin-bottom:8px; text-align:center; }
+    .logo-subtitle{ font-size:clamp(12px,3vw,14px); color:rgba(255,255,255,.7); letter-spacing:2px; text-align:center; margin-bottom:60px; }
+    .menu-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:400px; width:100%; }
+    .menu-item{
+      background:rgba(255,255,255,.1); backdrop-filter:blur(10px);
+      border-radius:16px; padding:clamp(20px,5vw,30px) 20px;
+      text-align:center; cursor:pointer; transition:all .3s;
+      border:1px solid rgba(255,255,255,.1);
+    }
+    .menu-item:active{ transform:translateY(-5px); background:rgba(255,255,255,.15); }
+    .menu-icon{ font-size:clamp(36px,10vw,48px); margin-bottom:12px; }
+    .menu-title{ font-size:clamp(14px,3.5vw,16px); font-weight:700; }
 
-        .logo-text {
-            font-size: clamp(32px, 8vw, 48px);
-            font-weight: 800;
-            color: white;
-            letter-spacing: -2px;
-            margin-bottom: 8px;
-            text-align: center;
-        }
+    .app-container{ display:none; min-height:100vh; }
+    .app-container.active{ display:block; }
 
-        .logo-subtitle {
-            font-size: clamp(12px, 3vw, 14px);
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 2px;
-            text-align: center;
-            margin-bottom: 60px;
-        }
+    .header{
+      background:linear-gradient(135deg,var(--primary) 0%,#0052CC 100%);
+      color:#fff; padding:20px 16px; position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; gap:12px;
+    }
+    .back-btn{ background:none; border:none; color:#fff; font-size:24px; cursor:pointer; padding:8px; }
+    .header h1{ font-size:clamp(18px,4.5vw,20px); font-weight:700; }
+    .container{ padding:16px; padding-bottom:110px; }
 
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            max-width: 400px;
-            width: 100%;
-        }
+    .section{ background:#fff; border-radius:12px; padding:20px; margin-bottom:16px; }
+    .section-title{
+      font-size:16px; font-weight:700; margin-bottom:16px; color:var(--bg);
+      padding-bottom:12px; border-bottom:2px solid var(--bg);
+    }
 
-        .menu-item {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: clamp(20px, 5vw, 30px) 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+    .form-group{ margin-bottom:16px; }
+    .form-label{ display:block; font-size:14px; font-weight:600; margin-bottom:8px; color:var(--bg); }
+    .form-input{
+      width:100%; padding:14px; border:1px solid #ddd; border-radius:8px;
+      font-size:16px; font-family:'Noto Sans KR',sans-serif;
+    }
+    textarea.form-input{ min-height:100px; resize:vertical; }
 
-        .menu-item:active {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.15);
-        }
+    .type-selector{ display:flex; flex-direction:column; gap:16px; margin-bottom:20px; }
+    .type-btn{
+      padding:24px; border:none; border-radius:16px;
+      background:linear-gradient(135deg,#fff 0%,#f5f5f5 100%);
+      cursor:pointer; transition:all .3s; font-weight:600; font-size:18px; color:var(--bg);
+      box-shadow:0 4px 12px rgba(0,0,0,.1);
+      display:flex; align-items:center; gap:16px; text-align:left;
+    }
+    .type-btn:active{ transform:translateY(-2px) scale(.98); box-shadow:0 6px 20px rgba(0,0,0,.15); }
+    .type-btn .icon{
+      font-size:48px; width:64px; height:64px;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .type-btn .content{ flex:1; }
+    .type-btn .title{ font-size:18px; font-weight:700; margin-bottom:4px; color:var(--bg); }
+    .type-btn .desc{ font-size:14px; color:#666; font-weight:400; }
+    .type-btn .arrow{ font-size:24px; color:#999; }
 
-        .menu-icon {
-            font-size: clamp(36px, 10vw, 48px);
-            margin-bottom: 12px;
-        }
+    .photo-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:12px; }
+    .photo-item{
+      aspect-ratio:1;
+      border:2px dashed #ddd; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; position:relative; overflow:hidden; background:#f5f5f5;
+    }
+    .photo-item img{ width:100%; height:100%; object-fit:cover; }
+    .photo-item .add-icon{ font-size:32px; color:#999; }
+    .photo-item .delete-btn{
+      position:absolute; top:4px; right:4px;
+      background:rgba(239,83,80,.9); color:#fff;
+      border:none; border-radius:50%;
+      width:24px; height:24px; font-size:16px; cursor:pointer; display:none;
+    }
+    .photo-item:hover .delete-btn{ display:block; }
 
-        .menu-title {
-            font-size: clamp(14px, 3.5vw, 16px);
-            font-weight: 700;
-            color: white;
-        }
+    .signature-container{ margin:20px 0; }
+    .signature-label{ background:rgba(0,0,0,.05); padding:12px; border-radius:8px; margin-bottom:12px; }
+    .signature-label p{ color:var(--bg); font-size:clamp(14px,3.5vw,16px); font-weight:700; margin:0; }
+    .signature-pad{
+      width:100%; height:200px; border:2px solid #333; background:#fff;
+      border-radius:8px; cursor:crosshair; touch-action:none;
+    }
+    .signature-controls{ margin-top:10px; }
 
-        /* 앱 화면 */
-        .app-container {
-            display: none;
-            min-height: 100vh;
-        }
+    .btn{
+      width:100%; padding:16px; border:none; border-radius:8px;
+      font-size:16px; font-weight:700; cursor:pointer; min-height:52px; transition:all .2s;
+    }
+    .btn-primary{ background:var(--primary); color:#fff; }
+    .btn-primary:active{ background:var(--primary-dark); }
+    .btn-secondary{ background:#e0e0e0; color:var(--bg); }
+    .btn[disabled]{ opacity:.6; cursor:not-allowed; }
 
-        .app-container.active {
-            display: block;
-        }
+    .toast{
+      position:fixed; bottom:100px; left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.85); color:#fff;
+      padding:12px 18px; border-radius:10px; font-size:14px;
+      z-index:1000; opacity:0; transition:opacity .25s;
+      pointer-events:none; max-width:90vw; text-align:center;
+    }
+    .toast.show{ opacity:1; }
 
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, #0052CC 100%);
-            color: white;
-            padding: 20px 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        .header h1 {
-            font-size: clamp(18px, 4.5vw, 20px);
-            font-weight: 700;
-        }
-
-        .container {
-            padding: 16px;
-            padding-bottom: 100px;
-        }
-
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: var(--bg);
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--bg);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--bg);
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-
-        textarea.form-input {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        /* 체크리스트 타입 선택 */
-        .type-selector {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .type-btn {
-            padding: 24px;
-            border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 18px;
-            color: var(--bg);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            text-align: left;
-        }
-
-        .type-btn:active {
-            transform: translateY(-2px) scale(0.98);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-        .type-btn .icon {
-            font-size: 48px;
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .type-btn .content {
-            flex: 1;
-        }
-
-        .type-btn .title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: var(--bg);
-        }
-
-        .type-btn .desc {
-            font-size: 14px;
-            color: #666;
-            font-weight: 400;
-        }
-
-        .type-btn .arrow {
-            font-size: 24px;
-            color: #999;
-        }
-
-        /* 사진 그리드 (최대 10장) */
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .photo-item {
-            aspect-ratio: 1;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            background: #f5f5f5;
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .photo-item .add-icon {
-            font-size: 32px;
-            color: #999;
-        }
-
-        .photo-item .delete-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(239, 83, 80, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-            cursor: pointer;
-            display: none;
-        }
-
-        .photo-item:hover .delete-btn {
-            display: block;
-        }
-
-        /* 서명 패드 */
-        .signature-container {
-            margin: 20px 0;
-        }
-
-        .signature-label {
-            background: rgba(0,0,0,0.05);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .signature-label p {
-            color: var(--bg);
-            font-size: clamp(14px, 3.5vw, 16px);
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .signature-pad {
-            width: 100%;
-            height: 200px;
-            border: 2px solid #333;
-            background: white;
-            border-radius: 8px;
-            cursor: crosshair;
-            touch-action: none;
-        }
-
-        .signature-controls {
-            margin-top: 10px;
-        }
-
-        /* 버튼 */
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            min-height: 50px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:active {
-            background: var(--primary-dark);
-        }
-
-        .btn-secondary {
-            background: #e0e0e0;
-            color: var(--bg);
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        /* 숨김 */
-        .hidden {
-            display: none !important;
-        }
-    </style>
+    .hidden{ display:none !important; }
+  </style>
 </head>
+
 <body>
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+  <div id="toast" class="toast"></div>
 
-    <!-- 홈 화면 -->
-    <div id="home-screen" class="home-screen">
-        <div>
-            <div class="logo-text">클린한 사람들</div>
-            <div class="logo-subtitle">입주청소 & interior</div>
-        </div>
+  <div id="home-screen" class="home-screen">
+    <div>
+      <div class="logo-text">클린한 사람들</div>
+      <div class="logo-subtitle">입주청소 & interior</div>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item" onclick="showChecklistSelector()">
+        <div class="menu-icon">📋</div>
+        <div class="menu-title">체크리스트</div>
+      </div>
+      <div class="menu-item" onclick="showApp('manual')">
+        <div class="menu-icon">📖</div>
+        <div class="menu-title">매뉴얼</div>
+      </div>
+    </div>
+  </div>
 
-        <div class="menu-grid">
-            <div class="menu-item" onclick="showChecklistSelector()">
-                <div class="menu-icon">📋</div>
-                <div class="menu-title">체크리스트</div>
+  <div id="type-selector-screen" class="app-container">
+    <div class="header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <h1>체크리스트 선택</h1>
+    </div>
+    <div class="container">
+      <div class="section">
+        <div class="type-selector">
+          <button class="type-btn" onclick="selectType('move_in')">
+            <div class="icon">🏠</div>
+            <div class="content">
+              <div class="title">입주청소</div>
+              <div class="desc">화장실, 거실, 주방 등 7개 구역</div>
             </div>
-            <div class="menu-item" onclick="showApp('manual')">
-                <div class="menu-icon">📖</div>
-                <div class="menu-title">매뉴얼</div>
+            <div class="arrow">›</div>
+          </button>
+
+          <button class="type-btn" onclick="selectType('shabu')">
+            <div class="icon">🍲</div>
+            <div class="content">
+              <div class="title">샤브올데이 영통점</div>
+              <div class="desc">A구역, B구역, 화장실</div>
             </div>
+            <div class="arrow">›</div>
+          </button>
+
+          <button class="type-btn" onclick="selectType('jinsa')">
+            <div class="icon">🥩</div>
+            <div class="content">
+              <div class="title">명륜진사갈비 영통점</div>
+              <div class="desc">바닥 청소</div>
+            </div>
+            <div class="arrow">›</div>
+          </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="checklist-app" class="app-container">
+    <div class="header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <div><h1 id="checklist-title">체크리스트</h1></div>
     </div>
 
-    <!-- 체크리스트 종류 선택 -->
-    <div id="type-selector-screen" class="app-container">
-        <div class="header">
-            <button class="back-btn" onclick="goHome()">←</button>
-            <h1>체크리스트 선택</h1>
+    <div class="container">
+      <div class="section">
+        <div class="form-group">
+          <label class="form-label">고객명 / 매장명</label>
+          <input type="text" class="form-input" id="customerName" placeholder="이름을 입력하세요">
         </div>
-        <div class="container">
-            <div class="section">
-                <div class="type-selector">
-                    <button class="type-btn" onclick="selectType('move_in')">
-                        <div class="icon">🏠</div>
-                        <div class="content">
-                            <div class="title">입주청소</div>
-                            <div class="desc">화장실, 거실, 주방 등 7개 구역</div>
-                        </div>
-                        <div class="arrow">›</div>
-                    </button>
-                    
-                    <button class="type-btn" onclick="selectType('shabu')">
-                        <div class="icon">🍲</div>
-                        <div class="content">
-                            <div class="title">샤브올데이 영통점</div>
-                            <div class="desc">A구역, B구역, 화장실</div>
-                        </div>
-                        <div class="arrow">›</div>
-                    </button>
-                    
-                    <button class="type-btn" onclick="selectType('jinsa')">
-                        <div class="icon">🥩</div>
-                        <div class="content">
-                            <div class="title">명륜진사갈비 영통점</div>
-                            <div class="desc">바닥 청소</div>
-                        </div>
-                        <div class="arrow">›</div>
-                    </button>
-                </div>
-            </div>
+        <div class="form-group">
+          <label class="form-label">작업 위치</label>
+          <input type="text" class="form-input" id="location" placeholder="주소를 입력하세요">
         </div>
+        <div class="form-group">
+          <label class="form-label">담당자</label>
+          <input type="text" class="form-input" id="worker" placeholder="담당자명을 입력하세요">
+        </div>
+      </div>
+
+      <div id="checklist-sections"></div>
+
+      <div class="section">
+        <div class="section-title">특이사항</div>
+        <textarea class="form-input" id="notes" placeholder="특이사항을 입력하세요"></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-title">서명</div>
+
+        <div class="signature-container">
+          <div class="signature-label"><p>작업을 완료한 팀장님께서 서명해주세요</p></div>
+          <canvas id="signature-pad-team" class="signature-pad"></canvas>
+          <div class="signature-controls">
+            <button class="btn btn-secondary" onclick="clearSignature('team')">서명 지우기</button>
+          </div>
+        </div>
+
+        <div class="signature-container">
+          <div class="signature-label"><p>작업을 확인한 고객님께서 서명해주세요</p></div>
+          <canvas id="signature-pad-customer" class="signature-pad"></canvas>
+          <div class="signature-controls">
+            <button class="btn btn-secondary" onclick="clearSignature('customer')">서명 지우기</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="submitBtn" class="btn btn-primary" onclick="generateReport()" style="margin-top:20px;">
+        완료 및 전송
+      </button>
     </div>
+  </div>
 
-    <!-- 체크리스트 앱 -->
-    <div id="checklist-app" class="app-container">
-        <div class="header">
-            <button class="back-btn" onclick="goHome()">←</button>
-            <div>
-                <h1 id="checklist-title">체크리스트</h1>
-            </div>
-        </div>
-        
-        <div class="container">
-            <!-- 기본 정보 -->
-            <div class="section">
-                <div class="form-group">
-                    <label class="form-label">고객명 / 매장명</label>
-                    <input type="text" class="form-input" id="customerName" placeholder="이름을 입력하세요">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">작업 위치</label>
-                    <input type="text" class="form-input" id="location" placeholder="주소를 입력하세요">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">담당자</label>
-                    <input type="text" class="form-input" id="worker" placeholder="담당자명을 입력하세요">
-                </div>
-            </div>
-
-            <!-- 체크리스트 섹션들이 여기에 동적으로 생성됨 -->
-            <div id="checklist-sections"></div>
-
-            <!-- 특이사항 -->
-            <div class="section">
-                <div class="section-title">특이사항</div>
-                <textarea class="form-input" id="notes" placeholder="특이사항을 입력하세요"></textarea>
-            </div>
-
-            <!-- 서명 -->
-            <div class="section">
-                <div class="section-title">서명</div>
-                
-                <div class="signature-container">
-                    <div class="signature-label">
-                        <p>작업을 완료한 팀장님께서 서명해주세요</p>
-                    </div>
-                    <canvas id="signature-pad-team" class="signature-pad"></canvas>
-                    <div class="signature-controls">
-                        <button class="btn btn-secondary" onclick="clearSignature('team')">서명 지우기</button>
-                    </div>
-                </div>
-
-                <div class="signature-container">
-                    <div class="signature-label">
-                        <p>작업을 확인한 고객님께서 서명해주세요</p>
-                    </div>
-                    <canvas id="signature-pad-customer" class="signature-pad"></canvas>
-                    <div class="signature-controls">
-                        <button class="btn btn-secondary" onclick="clearSignature('customer')">서명 지우기</button>
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn btn-primary" onclick="generateReport()" style="margin-top: 20px;">완료 및 전송</button>
-        </div>
+  <div id="manual-app" class="app-container">
+    <div class="header">
+      <button class="back-btn" onclick="goHome()">←</button>
+      <h1>업무 매뉴얼</h1>
     </div>
-
-    <!-- 매뉴얼 앱 (간단 버전) -->
-    <div id="manual-app" class="app-container">
-        <div class="header">
-            <button class="back-btn" onclick="goHome()">←</button>
-            <h1>업무 매뉴얼</h1>
-        </div>
-        <div class="container">
-            <div class="section">
-                <div class="section-title">사용 방법</div>
-                <ul style="padding-left: 20px; color: var(--bg); line-height: 1.8;">
-                    <li>체크리스트 종류를 선택합니다</li>
-                    <li>각 섹션별로 최대 10장까지 사진을 업로드할 수 있습니다</li>
-                    <li>특이사항을 기록합니다</li>
-                    <li>팀장과 고객의 서명을 받습니다</li>
-                    <li>완료 버튼을 누르면 PDF와 사진 압축파일이 생성됩니다</li>
-                </ul>
-            </div>
-        </div>
+    <div class="container">
+      <div class="section">
+        <div class="section-title">사용 방법</div>
+        <ul style="padding-left:20px;color:var(--bg);line-height:1.8;">
+          <li>체크리스트 종류를 선택합니다</li>
+          <li>각 섹션별로 최대 10장까지 사진을 업로드할 수 있습니다</li>
+          <li>특이사항을 기록합니다</li>
+          <li>팀장과 고객의 서명을 받습니다</li>
+          <li>완료 버튼을 누르면 <b>PDF와 사진 ZIP</b>이 자동으로 이메일 전송됩니다</li>
+        </ul>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 전역 변수
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaE7MgA_EoqCbFIt0itoWu3Hu00IGXNC41rXvNom87-R_xGM_GDmgP6Nji_uGCSK60/exec';
-        const FIXED_EMAIL = 'kjg2000914@naver.com';
-        
-        let currentType = null;
-        let photos = {}; // { sectionId: [base64Array] }
-        
-        // 체크리스트 타입 정의
-        const checklistTypes = {
-            move_in: {
-                name: '입주청소',
-                sections: {
-                    bathroom: '화장실',
-                    living: '거실',
-                    kitchen: '주방',
-                    bedroom: '방',
-                    laundry: '세탁실',
-                    veranda: '베란다',
-                    entrance: '현관'
-                }
-            },
-            shabu: {
-                name: '샤브올데이 영통점',
-                sections: {
-                    area_a: 'A구역 바닥',
-                    area_b: 'B구역 바닥',
-                    bathroom: '화장실'
-                }
-            },
-            jinsa: {
-                name: '명륜진사갈비 영통점',
-                sections: {
-                    floor: '바닥'
-                }
+  <script>
+    // ===============================
+    // 설정
+    // ===============================
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwk2HsvXu7lfLEa6Npu9B4EkcVkQW-anpMoRypV3WoJWDHsvHhOd4xdIxXwgGnu76mi/exec';
+    const FIXED_EMAIL = 'kjg2000914@naver.com';
+
+    let currentType = null;
+    let photos = {};
+
+    const checklistTypes = {
+      move_in: {
+        name: '입주청소',
+        sections: {
+          bathroom: '화장실',
+          living: '거실',
+          kitchen: '주방',
+          bedroom: '방',
+          laundry: '세탁실',
+          veranda: '베란다',
+          entrance: '현관'
+        }
+      },
+      shabu: {
+        name: '샤브올데이 영통점',
+        sections: {
+          area_a: 'A구역 바닥',
+          area_b: 'B구역 바닥',
+          bathroom: '화장실'
+        }
+      },
+      jinsa: {
+        name: '명륜진사갈비 영통점',
+        sections: { floor: '바닥' }
+      }
+    };
+
+    // ===============================
+    // 화면 전환
+    // ===============================
+    function showApp(appName) {
+      document.getElementById('home-screen').style.display = 'none';
+      document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
+      const app = document.getElementById(appName + '-app');
+      if (app) app.classList.add('active');
+    }
+
+    function goHome() {
+      document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
+      document.getElementById('home-screen').style.display = 'flex';
+    }
+
+    function showChecklistSelector() {
+      document.getElementById('home-screen').style.display = 'none';
+      document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
+      document.getElementById('type-selector-screen').classList.add('active');
+    }
+
+    function selectType(type) {
+      currentType = type;
+      const typeData = checklistTypes[type];
+      document.getElementById('checklist-title').textContent = typeData.name;
+      renderChecklist(typeData);
+      showApp('checklist');
+      setTimeout(() => initSignaturePads(), 250);
+    }
+
+    // ===============================
+    // 체크리스트 렌더
+    // ===============================
+    function renderChecklist(typeData) {
+      const container = document.getElementById('checklist-sections');
+      container.innerHTML = '';
+      photos = {};
+
+      Object.entries(typeData.sections).forEach(([key, name]) => {
+        photos[key] = [];
+        const section = document.createElement('div');
+        section.className = 'section';
+        section.innerHTML = `
+          <div class="section-title">${name}</div>
+          <div id="photos-${key}" class="photo-grid"></div>
+        `;
+        container.appendChild(section);
+        renderPhotoGrid(key);
+      });
+    }
+
+    function renderPhotoGrid(sectionId) {
+      const grid = document.getElementById(`photos-${sectionId}`);
+      grid.innerHTML = '';
+
+      const sectionPhotos = photos[sectionId] || [];
+
+      sectionPhotos.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'photo-item';
+        div.innerHTML = `
+          <img src="${item.preview}" alt="사진 ${index + 1}">
+          <button class="delete-btn" onclick="deletePhoto('${sectionId}', ${index})">×</button>
+        `;
+        grid.appendChild(div);
+      });
+
+      if (sectionPhotos.length < 10) {
+        const addItem = document.createElement('div');
+        addItem.className = 'photo-item';
+        addItem.innerHTML = `
+          <div class="add-icon">+</div>
+          <input type="file" accept="image/*" style="display:none" onchange="addPhoto('${sectionId}', this)" id="file-${sectionId}">
+        `;
+        addItem.onclick = () => document.getElementById(`file-${sectionId}`).click();
+        grid.appendChild(addItem);
+      }
+    }
+
+    async function addPhoto(sectionId, input) {
+      try {
+        if (!input.files || !input.files[0]) return;
+
+        const file = input.files[0];
+
+        if (!file.type.startsWith('image/')) {
+          showToast('이미지 파일만 업로드 가능합니다');
+          input.value = '';
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('파일 크기는 10MB 이하여야 합니다');
+          input.value = '';
+          return;
+        }
+
+        const previewDataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        photos[sectionId].push({ preview: previewDataUrl, file });
+        renderPhotoGrid(sectionId);
+        showToast('사진이 추가되었습니다');
+
+      } catch (e) {
+        console.error('사진 추가 오류:', e);
+        showToast('사진 추가 중 오류가 발생했습니다');
+      } finally {
+        input.value = '';
+      }
+    }
+
+    function deletePhoto(sectionId, index) {
+      photos[sectionId].splice(index, 1);
+      renderPhotoGrid(sectionId);
+      showToast('사진이 삭제되었습니다');
+    }
+
+    // ===============================
+    // 서명
+    // ===============================
+    function initSignaturePads() {
+      initSignaturePad('signature-pad-team');
+      initSignaturePad('signature-pad-customer');
+    }
+
+    function initSignaturePad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = 200;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+
+      let isDrawing = false;
+      let lastX = 0, lastY = 0;
+
+      function startDrawing(e) {
+        isDrawing = true;
+        const r = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        lastX = clientX - r.left;
+        lastY = clientY - r.top;
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+
+        const r = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = clientX - r.left;
+        const y = clientY - r.top;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+      }
+
+      function stopDrawing() { isDrawing = false; }
+
+      canvas.onmousedown = startDrawing;
+      canvas.onmousemove = draw;
+      canvas.onmouseup = stopDrawing;
+      canvas.onmouseleave = stopDrawing;
+
+      canvas.addEventListener('touchstart', startDrawing, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function clearSignature(type) {
+      const canvas = document.getElementById(`signature-pad-${type}`);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      showToast('서명이 지워졌습니다');
+    }
+
+    function hasSignature(canvas) {
+      const ctx = canvas.getContext('2d');
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let darkCount = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        if (r < 240 || g < 240 || b < 240) darkCount++;
+        if (darkCount > 200) return true;
+      }
+      return false;
+    }
+
+    // ===============================
+    // ✅ 이미지 리사이즈 함수(누락되어 있어서 추가)
+    // - maxSize: 최대 변 길이(px)
+    // - quality: jpeg 품질(0~1)
+    // ===============================
+    async function resizeImage(file, maxSize = 1200, quality = 0.7) {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = dataUrl;
+      });
+
+      let { width, height } = img;
+      const maxDim = Math.max(width, height);
+      if (maxDim > maxSize) {
+        const scale = maxSize / maxDim;
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', quality);
+      });
+
+      return blob;
+    }
+
+    // ===============================
+    // ✅ 전송 핵심(방식 유지)
+    // - 가장 안정: sendBeacon (POST + text/plain)
+    // - 실패 시: fetch(no-cors) fallback
+    // ===============================
+    async function postJsonNoCors(jsonString) {
+      // 1) sendBeacon (가장 안정: 모바일/백그라운드 전환에도 잘 보냄)
+      try {
+        if (navigator.sendBeacon) {
+          const ok = navigator.sendBeacon(
+            GOOGLE_SCRIPT_URL,
+            new Blob([jsonString], { type: 'text/plain;charset=UTF-8' })
+          );
+          if (ok) return { sent: true, method: 'beacon' };
+        }
+      } catch (e) {
+        console.log('sendBeacon 실패:', e);
+      }
+
+      // 2) fetch no-cors fallback
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: jsonString
+        });
+        return { sent: true, method: 'fetch-no-cors' };
+      } catch (e) {
+        throw new Error('전송 실패: ' + (e?.message || e));
+      }
+    }
+
+    // ===============================
+    // 전송
+    // ===============================
+    async function generateReport() {
+      const btn = document.getElementById('submitBtn');
+      if (btn.disabled) return;
+
+      const customerName = document.getElementById('customerName').value.trim();
+      const location = document.getElementById('location').value.trim();
+      const worker = document.getElementById('worker').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!customerName || !location || !worker) {
+        showToast('기본 정보를 모두 입력해주세요');
+        return;
+      }
+
+      const canvasTeam = document.getElementById('signature-pad-team');
+      const canvasCustomer = document.getElementById('signature-pad-customer');
+
+      if (!hasSignature(canvasTeam)) {
+        showToast('팀장 서명을 해주세요');
+        return;
+      }
+      if (!hasSignature(canvasCustomer)) {
+        showToast('고객 서명을 해주세요');
+        return;
+      }
+
+      const typeData = checklistTypes[currentType];
+      const today = new Date();
+      const isoDate = today.toISOString().split('T')[0];
+      const fileNameBase = `${typeData.name}_${customerName}_${isoDate}`.replace(/[\\/:*?"<>|]/g, '_');
+
+      btn.disabled = true;
+      btn.textContent = '전송 중...';
+      showToast('파일 생성 중...');
+
+      try {
+        console.log('=== 1단계: ZIP 생성 시작 ===');
+        const zip = new JSZip();
+        let photoCount = 0;
+
+        for (const [sectionId, arr] of Object.entries(photos)) {
+          if (!arr || arr.length === 0) continue;
+
+          const sectionName = typeData.sections[sectionId] || sectionId;
+          const folder = zip.folder(sectionName);
+
+          for (let idx = 0; idx < arr.length; idx++) {
+            try {
+              const item = arr[idx];
+              const file = item.file;
+
+              const resizedBlob = await resizeImage(file, 1200, 0.7);
+
+              const safeSection = sectionName.replace(/[\\/:*?"<>|]/g, '_');
+              const num = String(idx + 1).padStart(2, '0');
+              const outName = `${safeSection}_${num}.jpg`; // ✅ 리사이즈 결과는 jpg로 고정
+
+              folder.file(outName, resizedBlob);
+              photoCount++;
+            } catch (photoErr) {
+              console.error(`사진 ${idx} 추가 실패:`, photoErr);
             }
+          }
+        }
+
+        console.log(`총 ${photoCount}장의 사진 추가됨`);
+
+        showToast('사진 압축 중...');
+        const zipBase64 = await zip.generateAsync({
+          type: 'base64',
+          compression: 'DEFLATE',
+          compressionOptions: { level: 9 }
+        });
+        const zipSizeKB = Math.round(zipBase64.length / 1024);
+        console.log('ZIP 생성 완료, 크기:', zipSizeKB, 'KB');
+
+        if (zipSizeKB > 20000) {
+          throw new Error('ZIP 파일이 너무 큽니다 (20MB 초과). 사진 개수를 줄여주세요.');
+        }
+
+        console.log('=== 2단계: PDF 생성 시작 ===');
+        showToast('보고서(PDF) 생성 중...');
+
+        btn.classList.add('hidden');
+
+        const element = document.getElementById('checklist-app');
+
+        const canvas = await html2canvas(element, {
+          scale: 1.5,
+          backgroundColor: '#0a0a0a',
+          useCORS: true,
+          logging: false
+        });
+
+        btn.classList.remove('hidden');
+        btn.textContent = '전송 중...';
+        btn.disabled = true;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+          position -= pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        const pdfBase64 = pdf.output('dataurlstring').split(',')[1];
+        console.log('PDF Base64 크기:', Math.round(pdfBase64.length / 1024), 'KB');
+
+        console.log('=== 3단계: 이메일 전송 시작 ===');
+        showToast('이메일 전송 중...');
+
+        const emailData = {
+          to_email: FIXED_EMAIL,
+          customer_name: customerName,
+          location,
+          worker,
+          notes,
+          checklist_type: typeData.name,
+          date: today.toLocaleDateString('ko-KR'),
+          pdf_base64: pdfBase64,
+          pdf_filename: `${fileNameBase}.pdf`,
+          zip_base64: zipBase64,
+          zip_filename: `${fileNameBase}_사진.zip`
         };
 
-        // 화면 전환
-        function showApp(appName) {
-            // 모든 화면 숨기기
-            document.getElementById('home-screen').style.display = 'none';
-            document.querySelectorAll('.app-container').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // 선택한 앱 보이기
-            const app = document.getElementById(appName + '-app');
-            if (app) {
-                app.classList.add('active');
-            }
-        }
+        const payload = JSON.stringify(emailData);
+        console.log('전송 데이터 크기:', Math.round(payload.length / 1024), 'KB');
 
-        function goHome() {
-            document.querySelectorAll('.app-container').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.getElementById('home-screen').style.display = 'flex';
-        }
+        // ✅ 핵심: 안정 전송 (beacon → fetch no-cors)
+        const sentInfo = await postJsonNoCors(payload);
+        console.log('전송 요청 보냄:', sentInfo);
 
-        function showChecklistSelector() {
-            document.getElementById('home-screen').style.display = 'none';
-            document.querySelectorAll('.app-container').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.getElementById('type-selector-screen').classList.add('active');
-        }
+        // no-cors / beacon은 응답 확인이 불가능하니, 일단 전송 안내
+        showToast(`전송 요청 완료! (${FIXED_EMAIL})`);
 
-        function selectType(type) {
-            currentType = type;
-            const typeData = checklistTypes[type];
-            
-            document.getElementById('checklist-title').textContent = typeData.name;
-            renderChecklist(typeData);
-            showApp('checklist');
-            
-            // 서명 패드 초기화
-            setTimeout(() => {
-                initSignaturePads();
-            }, 300);
-        }
+        setTimeout(() => {
+          resetChecklistForm();
+        }, 2000);
 
-        // 체크리스트 렌더링
-        function renderChecklist(typeData) {
-            const container = document.getElementById('checklist-sections');
-            container.innerHTML = '';
-            photos = {};
-            
-            Object.entries(typeData.sections).forEach(([key, name]) => {
-                photos[key] = [];
-                
-                const section = document.createElement('div');
-                section.className = 'section';
-                section.innerHTML = `
-                    <div class="section-title">${name}</div>
-                    <div id="photos-${key}" class="photo-grid"></div>
-                `;
-                container.appendChild(section);
-                
-                renderPhotoGrid(key);
-            });
-        }
+      } catch (error) {
+        console.error('=== 오류 발생 ===');
+        console.error('오류:', error);
+        showToast('오류: ' + (error.message || error));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '완료 및 전송';
+      }
+    }
 
-        // 사진 그리드 렌더링
-        function renderPhotoGrid(sectionId) {
-            const grid = document.getElementById(`photos-${sectionId}`);
-            grid.innerHTML = '';
-            
-            const sectionPhotos = photos[sectionId] || [];
-            
-            // 기존 사진들
-            sectionPhotos.forEach((photo, index) => {
-                const item = document.createElement('div');
-                item.className = 'photo-item';
-                item.innerHTML = `
-                    <img src="${photo}" alt="사진 ${index + 1}">
-                    <button class="delete-btn" onclick="deletePhoto('${sectionId}', ${index})">×</button>
-                `;
-                grid.appendChild(item);
-            });
-            
-            // 추가 버튼 (최대 10장까지)
-            if (sectionPhotos.length < 10) {
-                const addItem = document.createElement('div');
-                addItem.className = 'photo-item';
-                addItem.innerHTML = `
-                    <div class="add-icon">+</div>
-                    <input type="file" accept="image/*" style="display:none" onchange="addPhoto('${sectionId}', this)" id="file-${sectionId}">
-                `;
-                addItem.onclick = () => document.getElementById(`file-${sectionId}`).click();
-                grid.appendChild(addItem);
-            }
-        }
+    function resetChecklistForm() {
+      document.getElementById('customerName').value = '';
+      document.getElementById('location').value = '';
+      document.getElementById('worker').value = '';
+      document.getElementById('notes').value = '';
 
-        // 사진 추가
-        function addPhoto(sectionId, input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    photos[sectionId].push(e.target.result);
-                    renderPhotoGrid(sectionId);
-                    showToast('사진이 추가되었습니다');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
+      const typeData = checklistTypes[currentType];
+      if (typeData) renderChecklist(typeData);
 
-        // 사진 삭제
-        function deletePhoto(sectionId, index) {
-            photos[sectionId].splice(index, 1);
-            renderPhotoGrid(sectionId);
-            showToast('사진이 삭제되었습니다');
-        }
+      clearSignature('team');
+      clearSignature('customer');
 
-        // 서명 패드 초기화
-        function initSignaturePads() {
-            initSignaturePad('signature-pad-team');
-            initSignaturePad('signature-pad-customer');
-        }
+      goHome();
+    }
 
-        function initSignaturePad(canvasId) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = 200;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            
-            let isDrawing = false;
-            let lastX = 0;
-            let lastY = 0;
-            
-            function startDrawing(e) {
-                isDrawing = true;
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                lastX = clientX - rect.left;
-                lastY = clientY - rect.top;
-            }
-            
-            function draw(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-                
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-                
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                
-                lastX = x;
-                lastY = y;
-            }
-            
-            function stopDrawing() {
-                isDrawing = false;
-            }
-            
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseleave', stopDrawing);
-            
-            canvas.addEventListener('touchstart', startDrawing, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            canvas.addEventListener('touchend', stopDrawing);
-        }
-
-        function clearSignature(type) {
-            const canvas = document.getElementById(`signature-pad-${type}`);
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            showToast('서명이 지워졌습니다');
-        }
-
-        // 보고서 생성
-        async function generateReport() {
-            const customerName = document.getElementById('customerName').value;
-            const location = document.getElementById('location').value;
-            const worker = document.getElementById('worker').value;
-            
-            if (!customerName || !location || !worker) {
-                showToast('기본 정보를 모두 입력해주세요');
-                return;
-            }
-            
-            // 서명 확인
-            const canvasTeam = document.getElementById('signature-pad-team');
-            const canvasCustomer = document.getElementById('signature-pad-customer');
-            
-            if (!hasSignature(canvasTeam)) {
-                showToast('팀장 서명을 해주세요');
-                return;
-            }
-            
-            if (!hasSignature(canvasCustomer)) {
-                showToast('고객 서명을 해주세요');
-                return;
-            }
-            
-            showToast('파일 생성 중...');
-            
-            try {
-                // 1. 사진 압축파일 생성
-                const zip = new JSZip();
-                const typeData = checklistTypes[currentType];
-                
-                Object.entries(photos).forEach(([sectionId, photoArray]) => {
-                    const sectionName = typeData.sections[sectionId];
-                    const folder = zip.folder(sectionName);
-                    
-                    photoArray.forEach((photoBase64, index) => {
-                        const base64Data = photoBase64.split(',')[1];
-                        folder.file(`${sectionName}_${index + 1}.jpg`, base64Data, {base64: true});
-                    });
-                });
-                
-                const zipBlob = await zip.generateAsync({type: 'blob'});
-                const zipUrl = URL.createObjectURL(zipBlob);
-                
-                // 2. PDF 생성
-                const element = document.getElementById('checklist-app');
-                const canvas = await html2canvas(element, {
-                    scale: 1.5,
-                    backgroundColor: '#0a0a0a'
-                });
-                
-                const imgData = canvas.toDataURL('image/jpeg', 0.85);
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                const imgWidth = 210;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                
-                const fileName = `${typeData.name}_${customerName}_${new Date().toISOString().split('T')[0]}`;
-                
-                // PDF 다운로드
-                pdf.save(`${fileName}.pdf`);
-                
-                // 압축파일 다운로드
-                const a = document.createElement('a');
-                a.href = zipUrl;
-                a.download = `${fileName}_사진.zip`;
-                a.click();
-                
-                showToast('파일이 생성되었습니다! ✓');
-                
-            } catch (error) {
-                console.error('오류:', error);
-                showToast('파일 생성 중 오류가 발생했습니다');
-            }
-        }
-
-        function hasSignature(canvas) {
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            return imageData.data.some(channel => channel !== 255);
-        }
-
-        // Toast 메시지
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-    </script>
+    // ===============================
+    // Toast
+    // ===============================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+  </script>
 </body>
 </html>
